@@ -10,9 +10,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: jiro4989/setup-nim-action@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-    - run: nimble test -y
-    - run: nimble test --gc:orc -y
+      - uses: actions/checkout@v3
+      - uses: jiro4989/setup-nim-action@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # only test compiling for now since it requires the ollama service running
+      - run: nim c tests/test_llama_leap.nim
+      #- run: nimble test -y
+      #- run: nimble test --gc:orc -y
