@@ -1,7 +1,4 @@
-# You can use this nim template to jump start your nim library or project.
+# Llama Leap
 
-This template includes:
-* MIT licence
-* src directory and a private common.nim
-* test directory
-* GitHub Actions to run the tests on GitHub
+- WIP
+- Nim library to work with the Ollama API
