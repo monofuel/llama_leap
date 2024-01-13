@@ -34,6 +34,43 @@ let resp = ollama.generate(req)
 echo "> " & resp.response
 ```
 
+## Chat
+
+```nim
+let req = ChatReq(
+  model: "llama2",
+  messages: @[
+    ChatMessage(
+      role: "system",
+      content: "Please talk like a pirate. You are Longbeard the llama."
+  ),
+  ChatMessage(
+    role: "user",
+    content: "How are you today?"
+  ),
+],
+  options: option(ModelParameters(
+    temperature: option(0.0f),
+    seed: option(42)
+  ))
+)
+let resp = ollama.chat(req)
+echo "> " & resp.message.content.strip()
+```
+
+## Pull
+
+```nim
+ollama.pullModel("llama2")
+```
+
+## Embeddings
+
+```nim
+let resp = ollama.generateEmbeddings("llama2", "How are you today?")
+echo "Embedding Length: " & $resp.embedding.len
+```
+
 # Testing
 
 - ensure ollama is running on the default port
