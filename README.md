@@ -21,23 +21,17 @@ echo ollama.generate("llama2", "How are you today?")
 # simple interface
 echo ollama.generate("llama2", "How are you today?")
 
-# nim typed interface
+# structured interface
 let req = GenerateReq(
   model: "llama2",
   prompt: "How are you today?",
-  system: option("Please talk like a pirate. You are longbeard the llama.")
+  options: option(ModelParameters(
+    temperature: option(0.0f),
+  )),
+  system: option("Please talk like a pirate. You are Longbeard the llama.")
 )
 let resp = ollama.generate(req)
 echo "> " & resp.response
-
-# direct json interface
-let req = %*{
-  "model": "llama2",
-  "prompt": "How are you today?",
-  "system": "Please talk like a pirate. You are longbeard the llama."
-}
-let resp = ollama.generate(req)
-echo "> " & resp["response"].getStr
 ```
 
 # Testing

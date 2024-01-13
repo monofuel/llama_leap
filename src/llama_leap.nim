@@ -2,6 +2,7 @@ import curly, jsony, std/[strutils, json, options, strformat, os]
 
 ## ollama API Interface
 ## https://github.com/jmorganca/ollama/blob/main/docs/api.md
+## https://github.com/jmorganca/ollama/blob/main/api/types.go
 
 ## model parameters: https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
 
@@ -10,17 +11,30 @@ type
     curlPool: CurlPool
     baseUrl: string
     curlTimeout: float32
+  ModelParameters* = ref object
+    mirostat*: Option[int]
+    mirostat_eta*: Option[float32]
+    mirostat_tau*: Option[float32]
+    num_ctx*: Option[int]
+    num_gqa*: Option[int]
+    num_gpu*: Option[int]
+    num_thread*: Option[int]
+    repeat_last_n*: Option[int]
+    repeat_penalty*: Option[float32]
+    temperature*: Option[float32]
+    seed*: Option[int]
+    # TODO rest
   GenerateReq* = ref object
     model*: string
     prompt*: string
-    images*: Option[seq[string]]  # list of base64 encoded images
-    format*: Option[string]       # optional format=json for a structured response
-    options*: Option[JsonNode]    # bag of model parameters
-    system*: Option[string]       # override modelfile system prompt
-    template_str*: Option[string] # override modelfile template
-    context*: Option[seq[int]]    # conversation encoding from a previous response
-    stream: Option[bool]          # stream=false to get a single response
-    raw*: Option[bool]            # use raw=true if you are specifying a fully templated prompt
+    images*: Option[seq[string]]      # list of base64 encoded images
+    format*: Option[string]           # optional format=json for a structured response
+    options*: Option[ModelParameters] # bag of model parameters
+    system*: Option[string]           # override modelfile system prompt
+    template_str*: Option[string]     # override modelfile template
+    context*: Option[seq[int]]        # conversation encoding from a previous response
+    stream: Option[bool]              # stream=false to get a single response
+    raw*: Option[bool] # use raw=true if you are specifying a fully templated prompt
   GenerateResp* = ref object
     model*: string
     created_at*: string

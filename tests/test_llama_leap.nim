@@ -1,7 +1,7 @@
 ## llama_leap API tests
 ## Ensure that ollama is running!
 
-import llama_leap, std/[unittest, json, options]
+import llama_leap, std/[unittest, json, options, strutils]
 
 suite "llama_leap":
   var ollama: OllamaAPI
@@ -19,15 +19,48 @@ suite "llama_leap":
       let req = GenerateReq(
         model: "llama2",
         prompt: "How are you today?",
+        options: option(ModelParameters(
+          temperature: option(0.0f),
+          seed: option(42)
+        )),
         system: option("Please talk like a pirate. You are Longbeard the llama.")
       )
       let resp = ollama.generate(req)
-      echo "> " & resp.response
+      echo "> " & resp.response.strip()
+
     test "json /api/generate":
       let req = %*{
         "model": "llama2",
         "prompt": "How are you today?",
-        "system": "Please talk like a ninja. You are Sneaky the llama."
+        "system": "Please talk like a ninja. You are Sneaky the llama.",
+        "options": {
+          "temperature": 0.0
+        }
       }
       let resp = ollama.generate(req)
-      echo "> " & resp["response"].getStr
+      echo "> " & resp["response"].getStr.strip()
+
+    test "context":
+      let req = GenerateReq(
+        model: "llama2",
+        prompt: "How are you today?",
+        system: option("Please talk like a pirate. You are Longbeard the llama."),
+        options: option(ModelParameters(
+          temperature: option(0.0f),
+          seed: option(42)
+        )),
+      )
+      let resp = ollama.generate(req)
+      echo "1> " & resp.response.strip()
+
+      let req2 = GenerateReq(
+        model: "llama2",
+        prompt: "How are you today?",
+        context: option(resp.context),
+        options: option(ModelParameters(
+          temperature: option(0.0f),
+          seed: option(42)
+        )),
+      )
+      let resp2 = ollama.generate(req2)
+      echo "2> " & resp2.response.strip()
