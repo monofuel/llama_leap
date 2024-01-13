@@ -77,9 +77,11 @@ proc generate*(api: OllamaAPI, model: string, prompt: string): string =
 
 proc generate*(api: OllamaAPI, req: JsonNode): JsonNode =
   ## direct json interface for /api/generate
+  ## only use if there are specific new features you need or know what you are doing
   let url = api.baseUrl / "/generate"
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
+  req["stream"] = newJBool(false)
 
   let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
   if resp.code != 200:

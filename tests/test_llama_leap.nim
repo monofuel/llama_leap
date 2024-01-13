@@ -11,14 +11,23 @@ suite "llama_leap":
   teardown:
     ollama.close()
 
-  test "simple /api/generate":
-    echo "> " & ollama.generate("llama2", "How are you today?")
+  suite "generate":
+    test "simple /api/generate":
+      echo "> " & ollama.generate("llama2", "How are you today?")
 
-  test "typed /api/generate":
-    let req = GenerateReq(
-      model: "llama2",
-      prompt: "How are you today?",
-      system: option("Please talk like a pirate. You are longbeard the llama.")
-    )
-    let resp = ollama.generate(req)
-    echo "> " & resp.response
+    test "typed /api/generate":
+      let req = GenerateReq(
+        model: "llama2",
+        prompt: "How are you today?",
+        system: option("Please talk like a pirate. You are Longbeard the llama.")
+      )
+      let resp = ollama.generate(req)
+      echo "> " & resp.response
+    test "json /api/generate":
+      let req = %*{
+        "model": "llama2",
+        "prompt": "How are you today?",
+        "system": "Please talk like a ninja. You are Sneaky the llama."
+      }
+      let resp = ollama.generate(req)
+      echo "> " & resp["response"].getStr
