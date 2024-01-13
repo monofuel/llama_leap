@@ -82,3 +82,7 @@ suite "llama_leap":
       )
       let resp2 = ollama.generate(req2)
       echo "2> " & resp2.response.strip()
+  suite "embeddings":
+    test "generate embeddings":
+      let resp = ollama.generateEmbeddings(TestModel, "How are you today?")
+      echo "> " & resp.embedding.join(",")

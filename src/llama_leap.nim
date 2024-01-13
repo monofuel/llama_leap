@@ -65,6 +65,12 @@ type
     details*: ModelDetails
   ListResp* = ref object
     models*: seq[OllamaModel]
+  EmbeddingReq* = ref object
+    model*: string
+    prompt*: string
+    options*: Option[ModelParameters] # bag of model parameters
+  EmbeddingResp* = ref object
+    embedding*: seq[float64]
 
 proc renameHook*(v: var GenerateReq, fieldName: var string) =
   ## `template` is a special keyword in nim, so we need to rename it during serialization
@@ -177,3 +183,25 @@ proc pullModel*(api: OllamaAPI, name: string) =
   let status = respJson["status"].getStr
   if status != "success":
     raise newException(CatchableError, &"ollama pull bad status: {resp.body}")
+
+proc generateEmbeddings*(
+  api: OllamaAPI,
+  model: string,
+  prompt: string,
+  options: Option[ModelParameters] = none(ModelParameters)
+): EmbeddingResp =
+  ## Get the embeddings for a prompt
+  let url = api.baseUrl / "embeddings"
+  var req = EmbeddingReq(
+    model: model,
+    prompt: prompt,
+    options: options
+  )
+
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama embedding failed: {resp.code} {resp.body}")
+  result = fromJson(resp.body, EmbeddingResp)
