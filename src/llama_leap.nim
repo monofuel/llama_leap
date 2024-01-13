@@ -57,7 +57,7 @@ type
     images: Option[seq[string]] # list of base64 encoded images
   ChatReq* = ref object
     model*: string
-    messages: seq[ChatMessage]
+    messages*: seq[ChatMessage]
     format*: Option[string]           # optional format=json for a structured response
     options*: Option[ModelParameters] # bag of model parameters
     template_str*: Option[string]     # override modelfile template
@@ -79,16 +79,16 @@ type
     stream*: bool
     path*: Option[string]
   ModelDetails* = ref object
-    format: string
-    family: string
-    families: Option[seq[string]]
-    parameter_size: string
-    quantization_level: string
+    format*: string
+    family*: string
+    families*: Option[seq[string]]
+    parameter_size*: string
+    quantization_level*: string
   OllamaModel* = ref object
     name*: string
     modified_at*: string
-    size: int
-    digest: string
+    size*: int
+    digest*: string
     details*: ModelDetails
   ListResp* = ref object
     models*: seq[OllamaModel]

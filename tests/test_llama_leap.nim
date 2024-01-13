@@ -83,6 +83,37 @@ suite "llama_leap":
       let resp2 = ollama.generate(req2)
       echo "2> " & resp2.response.strip()
 
+  suite "chat":
+    test "simple /api/chat":
+      let messages = @[
+        "How are you today?",
+        "I'm doing well, how are you?",
+        "I'm doing well, thanks for asking.",
+      ]
+      echo "> " & ollama.chat(TestModel, messages)
+
+    test "typed /api/chat":
+      let req = ChatReq(
+        model: TestModel,
+        messages: @[
+          ChatMessage(
+            role: "system",
+            content: "Please talk like a pirate. You are Longbeard the llama."
+        ),
+        ChatMessage(
+          role: "user",
+          content: "How are you today?"
+        ),
+      ],
+        options: option(ModelParameters(
+          temperature: option(0.0f),
+          seed: option(42)
+        ))
+      )
+      let resp = ollama.chat(req)
+      echo "> " & resp.message.content.strip()
+
+
   suite "embeddings":
     test "generate embeddings":
       let resp = ollama.generateEmbeddings(TestModel, "How are you today?")
