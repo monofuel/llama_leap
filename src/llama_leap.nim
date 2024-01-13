@@ -52,9 +52,9 @@ type
     eval_count*: int
     eval_duration*: int
   ChatMessage* = ref object
-    role*: string               # "system" "user" or "assistant"
+    role*: string                # "system" "user" or "assistant"
     content*: string
-    images: Option[seq[string]] # list of base64 encoded images
+    images*: Option[seq[string]] # list of base64 encoded images
   ChatReq* = ref object
     model*: string
     messages*: seq[ChatMessage]
