@@ -13,6 +13,10 @@ suite "llama_leap":
   teardown:
     ollama.close()
 
+  suite "pull":
+    test "pull model":
+      ollama.pullModel(TestModel)
+
   suite "list":
     test "list model tags":
       let resp = ollama.listModels()

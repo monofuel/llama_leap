@@ -155,8 +155,25 @@ proc generate*(api: OllamaAPI, req: JsonNode): JsonNode =
   result = fromJson(resp.body)
 
 proc listModels*(api: OllamaAPI): ListResp =
+  ## List all the models available
   let url = api.baseUrl / "tags"
   let resp = api.curlPool.get(url, timeout = api.curlTimeout)
   if resp.code != 200:
     raise newException(CatchableError, &"ollama list tags failed: {resp.code} {resp.body}")
   result = fromJson(resp.body, ListResp)
+
+proc pullModel*(api: OllamaAPI, name: string) =
+  ## Ask the ollama server to pull a model
+  let url = api.baseUrl / "pull"
+  let req = %*{"name": name, "stream": false}
+
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama pull failed: {resp.code} {resp.body}")
+  let respJson = fromJson(resp.body)
+  let status = respJson["status"].getStr
+  if status != "success":
+    raise newException(CatchableError, &"ollama pull bad status: {resp.body}")
