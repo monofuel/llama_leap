@@ -3,6 +3,8 @@
 
 import llama_leap, std/[unittest, json, options, strutils]
 
+const TestModel = "llama2"
+
 suite "llama_leap":
   var ollama: OllamaAPI
 
@@ -11,13 +13,25 @@ suite "llama_leap":
   teardown:
     ollama.close()
 
+  suite "list":
+    test "list model tags":
+      let resp = ollama.listModels()
+      var resultStr = ""
+      for model in resp.models:
+        resultStr.add(model.name & " ")
+      echo "> " & resultStr.strip()
+
   suite "generate":
+
+    test "load llama2":
+      ollama.loadModel(TestModel)
+
     test "simple /api/generate":
-      echo "> " & ollama.generate("llama2", "How are you today?")
+      echo "> " & ollama.generate(TestModel, "How are you today?")
 
     test "typed /api/generate":
       let req = GenerateReq(
-        model: "llama2",
+        model: TestModel,
         prompt: "How are you today?",
         options: option(ModelParameters(
           temperature: option(0.0f),
@@ -30,7 +44,7 @@ suite "llama_leap":
 
     test "json /api/generate":
       let req = %*{
-        "model": "llama2",
+        "model": TestModel,
         "prompt": "How are you today?",
         "system": "Please talk like a ninja. You are Sneaky the llama.",
         "options": {
@@ -42,7 +56,7 @@ suite "llama_leap":
 
     test "context":
       let req = GenerateReq(
-        model: "llama2",
+        model: TestModel,
         prompt: "How are you today?",
         system: option("Please talk like a pirate. You are Longbeard the llama."),
         options: option(ModelParameters(
@@ -54,7 +68,7 @@ suite "llama_leap":
       echo "1> " & resp.response.strip()
 
       let req2 = GenerateReq(
-        model: "llama2",
+        model: TestModel,
         prompt: "How are you today?",
         context: option(resp.context),
         options: option(ModelParameters(

@@ -51,6 +51,20 @@ type
     prompt_eval_duration*: int
     eval_count*: int
     eval_duration*: int
+  ModelDetails* = ref object
+    format: string
+    family: string
+    families: Option[seq[string]]
+    parameter_size: string
+    quantization_level: string
+  OllamaModel* = ref object
+    name*: string
+    modified_at*: string
+    size: int
+    digest: string
+    details*: ModelDetails
+  ListResp* = ref object
+    models*: seq[OllamaModel]
 
 proc renameHook*(v: var GenerateReq, fieldName: var string) =
   ## `template` is a special keyword in nim, so we need to rename it during serialization
@@ -98,13 +112,24 @@ proc close*(api: OllamaAPI) =
   api.curlPool.close()
 
 
+proc loadModel*(api: OllamaAPI, model: string): JsonNode {.discardable.} =
+  ## Calling /api/generate without a prompt will load the model
+  let url = api.baseUrl / "generate"
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+  let req = %*{"model": model}
+
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama failed to load model: {resp.code} {resp.body}")
+  result = fromJson(resp.body)
+
 proc generate*(api: OllamaAPI, req: GenerateReq): GenerateResp =
   ## typed interface for /api/generate
-  let url = api.baseUrl / "/generate"
+  let url = api.baseUrl / "generate"
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
   req.stream = option(false)
-  echo toJson(req)
   let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
   if resp.code != 200:
     raise newException(CatchableError, &"ollama generate failed: {resp.code} {resp.body}")
@@ -119,7 +144,7 @@ proc generate*(api: OllamaAPI, model: string, prompt: string): string =
 proc generate*(api: OllamaAPI, req: JsonNode): JsonNode =
   ## direct json interface for /api/generate
   ## only use if there are specific new features you need or know what you are doing
-  let url = api.baseUrl / "/generate"
+  let url = api.baseUrl / "generate"
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
   req["stream"] = newJBool(false)
@@ -128,3 +153,10 @@ proc generate*(api: OllamaAPI, req: JsonNode): JsonNode =
   if resp.code != 200:
     raise newException(CatchableError, &"ollama generate failed: {resp.code} {resp.body}")
   result = fromJson(resp.body)
+
+proc listModels*(api: OllamaAPI): ListResp =
+  let url = api.baseUrl / "tags"
+  let resp = api.curlPool.get(url, timeout = api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama list tags failed: {resp.code} {resp.body}")
+  result = fromJson(resp.body, ListResp)
