@@ -25,7 +25,7 @@ type
     seed*: Option[int]
     stop*: Option[string]
     tfs_z*: Option[float32]
-    num_predictions*: Option[int]
+    num_predict*: Option[int]
     top_k*: Option[int]
     top_p*: Option[float32]
   GenerateReq* = ref object
@@ -60,6 +60,29 @@ proc dumpHook*(v: var GenerateReq, fieldName: var string) =
   if fieldName == "template_str":
     fieldName = "template"
 
+proc dumpHook*(s: var string, v: object) =
+  ## jsony `hack` to skip optional fields that are nil
+  s.add '{'
+  var i = 0
+  # Normal objects.
+  for k, e in v.fieldPairs:
+    when compiles(e.isSome):
+      if e.isSome:
+        if i > 0:
+          s.add ','
+        s.dumpHook(k)
+        s.add ':'
+        s.dumpHook(e)
+        inc i
+    else:
+      if i > 0:
+        s.add ','
+      s.dumpHook(k)
+      s.add ':'
+      s.dumpHook(e)
+      inc i
+  s.add '}'
+
 proc newOllamaAPI*(
     baseUrl: string = "http://localhost:11434/api",
     curlPoolSize: int = 4,
@@ -81,7 +104,7 @@ proc generate*(api: OllamaAPI, req: GenerateReq): GenerateResp =
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
   req.stream = option(false)
-
+  echo toJson(req)
   let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
   if resp.code != 200:
     raise newException(CatchableError, &"ollama generate failed: {resp.code} {resp.body}")
