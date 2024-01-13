@@ -23,7 +23,11 @@ type
     repeat_penalty*: Option[float32]
     temperature*: Option[float32]
     seed*: Option[int]
-    # TODO rest
+    stop*: Option[string]
+    tfs_z*: Option[float32]
+    num_predictions*: Option[int]
+    top_k*: Option[int]
+    top_p*: Option[float32]
   GenerateReq* = ref object
     model*: string
     prompt*: string
