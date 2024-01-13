@@ -350,3 +350,11 @@ proc generateEmbeddings*(
 # TODO: POST /api/copy
 # TODO: DELETE /api/delete
 # TODO: POST /api/push
+
+proc getVersion*(api: OllamaAPI): string =
+  let url = api.baseUrl / "version"
+  let resp = api.curlPool.get(url, timeout = api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama version failed: {resp.code} {resp.body}")
+  let json = fromJson(resp.body)
+  result = json["version"].getStr

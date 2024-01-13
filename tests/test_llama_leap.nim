@@ -15,6 +15,10 @@ suite "llama_leap":
   teardown:
     ollama.close()
 
+  suite "version":
+    test "version":
+      echo "> " & ollama.getVersion()
+
   suite "pull":
     test "pull model":
       ollama.pullModel(TestModel)
