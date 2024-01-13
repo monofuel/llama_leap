@@ -51,6 +51,33 @@ type
     prompt_eval_duration*: int
     eval_count*: int
     eval_duration*: int
+  ChatMessage* = ref object
+    role*: string               # "system" "user" or "assistant"
+    content*: string
+    images: Option[seq[string]] # list of base64 encoded images
+  ChatReq* = ref object
+    model*: string
+    messages: seq[ChatMessage]
+    format*: Option[string]           # optional format=json for a structured response
+    options*: Option[ModelParameters] # bag of model parameters
+    template_str*: Option[string]     # override modelfile template
+    stream: Option[bool]              # stream=false to get a single response
+  ChatResp* = ref object
+    model*: string
+    created_at*: string
+    message*: ChatMessage
+    done*: bool # always true for stream=false
+    total_duration*: int
+    load_duration*: int
+    prompt_eval_count*: int
+    prompt_eval_duration*: int
+    eval_count*: int
+    eval_duration*: int
+  CreateModelReq* = ref object
+    name*: string
+    modelfile*: Option[string]
+    stream*: bool
+    path*: Option[string]
   ModelDetails* = ref object
     format: string
     family: string
@@ -72,6 +99,14 @@ type
   EmbeddingResp* = ref object
     embedding*: seq[float64]
 
+proc renameHook*(v: var ChatReq, fieldName: var string) =
+  ## `template` is a special keyword in nim, so we need to rename it during serialization
+  if fieldName == "template":
+    fieldName = "template_str"
+proc dumpHook*(v: var ChatReq, fieldName: var string) =
+  if fieldName == "template_str":
+    fieldName = "template"
+
 proc renameHook*(v: var GenerateReq, fieldName: var string) =
   ## `template` is a special keyword in nim, so we need to rename it during serialization
   if fieldName == "template":
@@ -79,6 +114,7 @@ proc renameHook*(v: var GenerateReq, fieldName: var string) =
 proc dumpHook*(v: var GenerateReq, fieldName: var string) =
   if fieldName == "template_str":
     fieldName = "template"
+
 
 proc dumpHook*(s: var string, v: object) =
   ## jsony `hack` to skip optional fields that are nil
@@ -160,6 +196,41 @@ proc generate*(api: OllamaAPI, req: JsonNode): JsonNode =
     raise newException(CatchableError, &"ollama generate failed: {resp.code} {resp.body}")
   result = fromJson(resp.body)
 
+proc chat*(api: OllamaAPI, req: ChatReq): ChatResp =
+  ## typed interface for /api/chat
+  let url = api.baseUrl / "chat"
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+  req.stream = option(false)
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama chat failed: {resp.code} {resp.body}")
+  result = fromJson(resp.body, ChatResp)
+
+proc chat*(api: OllamaAPI, model: string, messages: seq[string]): string =
+  ## simple interface for /api/chat
+  ## assuming alternating user -> assistant message history
+  let req = ChatReq(model: model)
+  var user = true
+  for m in messages:
+    req.messages.add(ChatMessage(role: if user: "user" else: "assistant", content: m))
+    user = not user
+  let resp = api.chat(req)
+  result = resp.message.content
+
+proc chat*(api: OllamaAPI, req: JsonNode): JsonNode =
+  ## direct json interface for /api/chat
+  ## only use if there are specific new features you need or know what you are doing
+  let url = api.baseUrl / "chat"
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+  req["stream"] = newJBool(false)
+
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama chat failed: {resp.code} {resp.body}")
+  result = fromJson(resp.body)
+
 proc listModels*(api: OllamaAPI): ListResp =
   ## List all the models available
   let url = api.baseUrl / "tags"
@@ -200,8 +271,21 @@ proc generateEmbeddings*(
 
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
-
-  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  var resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
   if resp.code != 200:
     raise newException(CatchableError, &"ollama embedding failed: {resp.code} {resp.body}")
-  result = fromJson(resp.body, EmbeddingResp)
+
+  # NB. the API has a bug where it will sometimes return `"embeddding": null`
+  # https://github.com/jmorganca/ollama/issues/1707
+  # seems related to switching model modes between requests
+  # retrying the request appears to work around the issue.
+  let resultJson = fromJson(resp.body)
+  if resultJson["embedding"].kind == JNull:
+    resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+    if resp.code != 200:
+      raise newException(CatchableError,
+          &"ollama embedding failed: {resp.code} {resp.body}")
+
+    result = fromJson(resp.body, EmbeddingResp)
+  else:
+    result = fromJson(resp.body, EmbeddingResp)
