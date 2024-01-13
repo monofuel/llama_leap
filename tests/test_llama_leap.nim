@@ -112,7 +112,19 @@ suite "llama_leap":
       )
       let resp = ollama.chat(req)
       echo "> " & resp.message.content.strip()
+  suite "create":
+    let testModelName = "test-pirate-llama2"
+    test "create specifying modelfile":
+      let modelfile = """
+FROM llama2
+PARAMETER temperature 0
+PARAMETER num_ctx 4096
 
+SYSTEM Please talk like a pirate. You are Longbeard the llama.
+"""
+      ollama.createModel(testModelName, modelfile)
+    test "use our created modelfile":
+      echo "> " & ollama.generate(testModelName, "How are you today?")
 
   suite "embeddings":
     test "generate embeddings":

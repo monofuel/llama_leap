@@ -15,6 +15,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       # only test compiling for now since it requires the ollama service running
+      - run: nimble install -y
       - run: nim c tests/test_llama_leap.nim
       #- run: nimble test -y
       #- run: nimble test --gc:orc -y

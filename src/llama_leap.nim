@@ -231,6 +231,34 @@ proc chat*(api: OllamaAPI, req: JsonNode): JsonNode =
     raise newException(CatchableError, &"ollama chat failed: {resp.code} {resp.body}")
   result = fromJson(resp.body)
 
+proc createModel*(
+  api: OllamaAPI,
+  name: string,
+  modelfile: string = "",
+  path: string = ""
+) =
+  ## Create a model from a Modelfile
+  ## (Recommended): set `modelfile` as the contents of your modelfile
+  ## (Alternative): set `path` to a server local path to a modelfile
+  let url = api.baseUrl / "create"
+  let req = CreateModelReq(
+    name: name,
+    modelfile: if modelfile == "": none(string) else: option(modelfile),
+    path: if path == "": none(string) else: option(path),
+    stream: false
+  )
+
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama create failed: {resp.code} {resp.body}")
+  let respJson = fromJson(resp.body)
+  let status = respJson["status"].getStr
+  if status != "success":
+    raise newException(CatchableError, &"ollama create bad status: {resp.body}")
+
 proc listModels*(api: OllamaAPI): ListResp =
   ## List all the models available
   let url = api.baseUrl / "tags"
