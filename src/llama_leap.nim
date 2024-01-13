@@ -185,7 +185,6 @@ proc generate*(api: OllamaAPI, req: GenerateReq): GenerateResp =
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
   req.stream = option(false)
-  echo toJson(req)
   let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
   if resp.code != 200:
     raise newException(CatchableError, &"ollama generate failed: {resp.code} {resp.body}")
