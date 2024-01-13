@@ -92,6 +92,11 @@ type
     details*: ModelDetails
   ListResp* = ref object
     models*: seq[OllamaModel]
+  ShowModel* = ref object
+    modelfile*: string
+    parameters*: string
+    template_str*: string
+    details*: ModelDetails
   EmbeddingReq* = ref object
     model*: string
     prompt*: string
@@ -99,24 +104,32 @@ type
   EmbeddingResp* = ref object
     embedding*: seq[float64]
 
-proc renameHook*(v: var ChatReq, fieldName: var string) =
+proc renameHook(v: var ChatReq, fieldName: var string) =
   ## `template` is a special keyword in nim, so we need to rename it during serialization
   if fieldName == "template":
     fieldName = "template_str"
-proc dumpHook*(v: var ChatReq, fieldName: var string) =
+proc dumpHook(v: var ChatReq, fieldName: var string) =
   if fieldName == "template_str":
     fieldName = "template"
 
-proc renameHook*(v: var GenerateReq, fieldName: var string) =
+proc renameHook(v: var GenerateReq, fieldName: var string) =
   ## `template` is a special keyword in nim, so we need to rename it during serialization
   if fieldName == "template":
     fieldName = "template_str"
-proc dumpHook*(v: var GenerateReq, fieldName: var string) =
+proc dumpHook(v: var GenerateReq, fieldName: var string) =
+  if fieldName == "template_str":
+    fieldName = "template"
+
+proc renameHook(v: var ShowModel, fieldName: var string) =
+  ## `template` is a special keyword in nim, so we need to rename it during serialization
+  if fieldName == "template":
+    fieldName = "template_str"
+proc dumpHook(v: var ShowModel, fieldName: var string) =
   if fieldName == "template_str":
     fieldName = "template"
 
 
-proc dumpHook*(s: var string, v: object) =
+proc dumpHook(s: var string, v: object) =
   ## jsony `hack` to skip optional fields that are nil
   s.add '{'
   var i = 0
@@ -172,6 +185,7 @@ proc generate*(api: OllamaAPI, req: GenerateReq): GenerateResp =
   var headers: curly.HttpHeaders
   headers["Content-Type"] = "application/json"
   req.stream = option(false)
+  echo toJson(req)
   let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
   if resp.code != 200:
     raise newException(CatchableError, &"ollama generate failed: {resp.code} {resp.body}")
@@ -267,6 +281,19 @@ proc listModels*(api: OllamaAPI): ListResp =
     raise newException(CatchableError, &"ollama list tags failed: {resp.code} {resp.body}")
   result = fromJson(resp.body, ListResp)
 
+proc showModel*(api: OllamaAPI, name: string): ShowModel =
+  ## get details for a specific model
+  let url = api.baseUrl / "show"
+  let req = %*{"name": name}
+
+  var headers: curly.HttpHeaders
+  headers["Content-Type"] = "application/json"
+
+  let resp = api.curlPool.post(url, headers, toJson(req), api.curlTimeout)
+  if resp.code != 200:
+    raise newException(CatchableError, &"ollama show failed: {resp.code} {resp.body}")
+  result = fromJson(resp.body, ShowModel)
+
 proc pullModel*(api: OllamaAPI, name: string) =
   ## Ask the ollama server to pull a model
   let url = api.baseUrl / "pull"
@@ -317,3 +344,9 @@ proc generateEmbeddings*(
     result = fromJson(resp.body, EmbeddingResp)
   else:
     result = fromJson(resp.body, EmbeddingResp)
+
+# TODO: HEAD /api/blobs/:digest
+# TODO: POST /api/blobs/:digest
+# TODO: POST /api/copy
+# TODO: DELETE /api/delete
+# TODO: POST /api/push
