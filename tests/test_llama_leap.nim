@@ -3,8 +3,31 @@
 
 import llama_leap, jsony, std/[unittest, json, options, strutils]
 
+proc dumpHook*(s: var string, v: object) =
+  ## jsony `hack` to skip optional fields that are nil
+  s.add '{'
+  var i = 0
+  # Normal objects.
+  for k, e in v.fieldPairs:
+    when compiles(e.isSome):
+      if e.isSome:
+        if i > 0:
+          s.add ','
+        s.dumpHook(k)
+        s.add ':'
+        s.dumpHook(e)
+        inc i
+    else:
+      if i > 0:
+        s.add ','
+      s.dumpHook(k)
+      s.add ':'
+      s.dumpHook(e)
+      inc i
+  s.add '}'
+
 const
-  TestModel = "llama2"
+  TestModel = "llama3"
   TestModelfileName = "test-pirate-llama2"
 
 suite "llama_leap":
