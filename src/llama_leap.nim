@@ -129,7 +129,7 @@ proc dumpHook(v: var ShowModel, fieldName: var string) =
     fieldName = "template"
 
 
-proc dumpHook*(s: var string, v: object) =
+proc dumpHook(s: var string, v: object) =
   ## jsony `hack` to skip optional fields that are nil
   s.add '{'
   var i = 0
