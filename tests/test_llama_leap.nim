@@ -138,8 +138,8 @@ SYSTEM Please talk like a pirate. You are Longbeard the llama.
     test "show model":
       let resp = ollama.showModel(TestModelfileName)
       echo "> " & toJson(resp)
-      # validate that renameHook() is working properly
-      assert resp.template_str != ""
+      # assert that special keywords are working properly
+      assert resp.`template` != ""
 
   suite "embeddings":
     test "generate embeddings":

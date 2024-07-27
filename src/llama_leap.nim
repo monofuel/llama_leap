@@ -1,4 +1,4 @@
-import curly, jsony, std/[strutils, json, options, strformat, os]
+import curly, jsony, std/[strutils, tables, json, options, strformat, os]
 
 ## ollama API Interface
 ## https://github.com/jmorganca/ollama/blob/main/docs/api.md
@@ -28,6 +28,23 @@ type
     num_predict*: Option[int]
     top_k*: Option[int]
     top_p*: Option[float32]
+  # ToolFunctionParameter* = object
+  #   `type`*: string
+  #   description*: string
+  ToolFunctionParameters* = object
+    `type`*: string # object
+    # had serialization issues when properties was a table
+    # it was also kind of confusing to work with
+    #properties*: Table[string, ToolFunctionParameter]
+    properties*: JsonNode
+    required*: seq[string]
+  ToolFunction* = ref object
+    name*: string
+    description*: string
+    parameters*: ToolFunctionParameters
+  Tool* = ref object
+    `type`*: string
+    function*: ToolFunction
   GenerateReq* = ref object
     model*: string
     prompt*: string
@@ -35,7 +52,7 @@ type
     format*: Option[string]           # optional format=json for a structured response
     options*: Option[ModelParameters] # bag of model parameters
     system*: Option[string]           # override modelfile system prompt
-    template_str*: Option[string]     # override modelfile template
+    `template`*: Option[string]     # override modelfile template
     context*: Option[seq[int]]        # conversation encoding from a previous response
     stream: Option[bool]              # stream=false to get a single response
     raw*: Option[bool] # use raw=true if you are specifying a fully templated prompt
@@ -51,16 +68,23 @@ type
     prompt_eval_duration*: int
     eval_count*: int
     eval_duration*: int
+  ToolCallFunction* = ref object
+    name*: string
+    arguments*: JsonNode # map of [string]: any
+  ToolCall* = ref object
+    function*: ToolCallFunction
   ChatMessage* = ref object
-    role*: string                # "system" "user" or "assistant"
+    role*: string                # "system" "user" "tool" or "assistant"
     content*: string
     images*: Option[seq[string]] # list of base64 encoded images
+    tool_calls*: seq[ToolCall]
   ChatReq* = ref object
     model*: string
+    tools*: seq[Tool] # requires stream=false currently
     messages*: seq[ChatMessage]
     format*: Option[string]           # optional format=json for a structured response
     options*: Option[ModelParameters] # bag of model parameters
-    template_str*: Option[string]     # override modelfile template
+    `template`*: Option[string]     # override modelfile template
     stream: Option[bool]              # stream=false to get a single response
   ChatResp* = ref object
     model*: string
@@ -95,7 +119,7 @@ type
   ShowModel* = ref object
     modelfile*: string
     parameters*: string
-    template_str*: string
+    `template`*: string
     details*: ModelDetails
   EmbeddingReq* = ref object
     model*: string
@@ -103,31 +127,6 @@ type
     options*: Option[ModelParameters] # bag of model parameters
   EmbeddingResp* = ref object
     embedding*: seq[float64]
-
-proc renameHook(v: var ChatReq, fieldName: var string) =
-  ## `template` is a special keyword in nim, so we need to rename it during serialization
-  if fieldName == "template":
-    fieldName = "template_str"
-proc dumpHook(v: var ChatReq, fieldName: var string) =
-  if fieldName == "template_str":
-    fieldName = "template"
-
-proc renameHook(v: var GenerateReq, fieldName: var string) =
-  ## `template` is a special keyword in nim, so we need to rename it during serialization
-  if fieldName == "template":
-    fieldName = "template_str"
-proc dumpHook(v: var GenerateReq, fieldName: var string) =
-  if fieldName == "template_str":
-    fieldName = "template"
-
-proc renameHook(v: var ShowModel, fieldName: var string) =
-  ## `template` is a special keyword in nim, so we need to rename it during serialization
-  if fieldName == "template":
-    fieldName = "template_str"
-proc dumpHook(v: var ShowModel, fieldName: var string) =
-  if fieldName == "template_str":
-    fieldName = "template"
-
 
 proc dumpHook(s: var string, v: object) =
   ## jsony `hack` to skip optional fields that are nil
