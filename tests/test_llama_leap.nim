@@ -1,11 +1,13 @@
 ## llama_leap API tests
 ## Ensure that ollama is running!
 
-import llama_leap, jsony, std/[unittest, json, options, strutils]
+import
+  std/[unittest, json, options, strutils],
+  llama_leap, jsony
 
 const
-  TestModel = "llama2"
-  TestModelfileName = "test-pirate-llama2"
+  TestModel = "llama3.1:8b"
+  TestModelfileName = "test-pirate-llama3.1"
 
 suite "llama_leap":
   var ollama: OllamaAPI
@@ -33,7 +35,7 @@ suite "llama_leap":
 
   suite "generate":
 
-    test "load llama2":
+    test "load llama3.1":
       ollama.loadModel(TestModel)
 
     test "simple /api/generate":
@@ -118,10 +120,11 @@ suite "llama_leap":
       )
       let resp = ollama.chat(req)
       echo "> " & resp.message.content.strip()
+      
   suite "create":
     test "create specifying modelfile":
       let modelfile = """
-FROM llama2
+FROM llama3.1:8b
 PARAMETER temperature 0
 PARAMETER num_ctx 4096
 
