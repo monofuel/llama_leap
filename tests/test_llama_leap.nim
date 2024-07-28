@@ -106,11 +106,11 @@ suite "llama_leap":
         messages: @[
           ChatMessage(
             role: "system",
-            content: "Please talk like a pirate. You are Longbeard the llama."
+            content: option("Please talk like a pirate. You are Longbeard the llama.")
         ),
         ChatMessage(
           role: "user",
-          content: "How are you today?"
+          content: option("How are you today?")
         ),
       ],
         options: option(ModelParameters(
@@ -119,7 +119,7 @@ suite "llama_leap":
         ))
       )
       let resp = ollama.chat(req)
-      echo "> " & resp.message.content.strip()
+      echo "> " & resp.message.content.get.strip()
       
   suite "create":
     test "create specifying modelfile":

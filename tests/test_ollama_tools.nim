@@ -2,7 +2,7 @@
 ## Ensure that ollama is running!
 
 import
-  std/[unittest, json, tables, strutils],
+  std/[unittest, json, tables, options, strutils],
   llama_leap, jsony
 
 # Must use a tools compatible model!
@@ -48,7 +48,7 @@ suite "ollama tools":
       var messages = @[
         ChatMessage(
           role: "user",
-          content: "What is the flight time from New York (NYC) to Los Angeles (LAX)?"
+          content: option("What is the flight time from New York (NYC) to Los Angeles (LAX)?")
         )
       ]
 
@@ -98,7 +98,7 @@ suite "ollama tools":
       let toolResult = getFlightTimes(toolFuncArgs["departure"].getStr, toolFuncArgs["arrival"].getStr)
       messages.add(ChatMessage(
         role: "tool",
-        content: toolResult
+        content: option(toolResult)
       ))
 
       # message history with tool result
@@ -106,4 +106,4 @@ suite "ollama tools":
         model: TestModel,
         messages: messages
       ))
-      echo "RESULT: " & finalResponse.message.content
+      echo "RESULT: " & finalResponse.message.content.get

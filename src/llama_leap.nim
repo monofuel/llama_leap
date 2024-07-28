@@ -75,7 +75,7 @@ type
     function*: ToolCallFunction
   ChatMessage* = ref object
     role*: string                # "system" "user" "tool" or "assistant"
-    content*: string
+    content*: Option[string]
     images*: Option[seq[string]] # list of base64 encoded images
     tool_calls*: seq[ToolCall]
   ChatReq* = ref object
@@ -225,10 +225,10 @@ proc chat*(api: OllamaAPI, model: string, messages: seq[string]): string =
   let req = ChatReq(model: model)
   var user = true
   for m in messages:
-    req.messages.add(ChatMessage(role: if user: "user" else: "assistant", content: m))
+    req.messages.add(ChatMessage(role: if user: "user" else: "assistant", content: option(m)))
     user = not user
   let resp = api.chat(req)
-  result = resp.message.content
+  result = resp.message.content.get
 
 proc chat*(api: OllamaAPI, req: JsonNode): JsonNode =
   ## direct json interface for /api/chat
