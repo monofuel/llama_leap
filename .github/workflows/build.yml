@@ -11,11 +11,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: jiro4989/setup-nim-action@v1
+      - uses: jiro4989/setup-nim-action@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       # only test compiling for now since it requires the ollama service running
-      - run: nimble install -y
-      - run: nim c tests/test_llama_leap.nim
-      #- run: nimble test -y
-      #- run: nimble test --gc:orc -y
+      # TODO setup a test ollama instance
+      - run: | 
+        nim c examples/example.nim
+        nim c tests/test_llama_leap.nim
+
