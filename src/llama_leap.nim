@@ -15,6 +15,7 @@ type
     curlPool: CurlPool
     baseUrl: string
     curlTimeout: float32
+
   ModelParameters* = ref object
     mirostat*: Option[int]
     mirostat_eta*: Option[float32]
@@ -32,9 +33,8 @@ type
     num_predict*: Option[int]
     top_k*: Option[int]
     top_p*: Option[float32]
-  # ToolFunctionParameter* = object
-  #   `type`*: string
-  #   description*: string
+
+
   ToolFunctionParameters* = object
     `type`*: string # object
     # had serialization issues when properties was a table
@@ -42,13 +42,16 @@ type
     #properties*: Table[string, ToolFunctionParameter]
     properties*: JsonNode
     required*: seq[string]
+
   ToolFunction* = ref object
     name*: string
     description*: string
     parameters*: ToolFunctionParameters
+
   Tool* = ref object
     `type`*: string
     function*: ToolFunction
+
   GenerateReq* = ref object
     model*: string
     prompt*: string
@@ -60,6 +63,7 @@ type
     context*: Option[seq[int]]        # conversation encoding from a previous response
     stream: Option[bool]              # stream=false to get a single response
     raw*: Option[bool] # use raw=true if you are specifying a fully templated prompt
+
   GenerateResp* = ref object
     model*: string
     created_at*: string
@@ -72,16 +76,20 @@ type
     prompt_eval_duration*: int
     eval_count*: int
     eval_duration*: int
+
   ToolCallFunction* = ref object
     name*: string
     arguments*: JsonNode # map of [string]: any
+
   ToolCall* = ref object
     function*: ToolCallFunction
+
   ChatMessage* = ref object
     role*: string                # "system" "user" "tool" or "assistant"
     content*: Option[string]
     images*: Option[seq[string]] # list of base64 encoded images
     tool_calls*: seq[ToolCall]
+
   ChatReq* = ref object
     model*: string
     tools*: seq[Tool] # requires stream=false currently
@@ -90,6 +98,7 @@ type
     options*: Option[ModelParameters] # bag of model parameters
     `template`*: Option[string]     # override modelfile template
     stream: Option[bool]              # stream=false to get a single response
+
   ChatResp* = ref object
     model*: string
     created_at*: string
@@ -101,34 +110,41 @@ type
     prompt_eval_duration*: int
     eval_count*: int
     eval_duration*: int
+
   CreateModelReq* = ref object
     name*: string
     modelfile*: Option[string]
     stream*: bool
     path*: Option[string]
+
   ModelDetails* = ref object
     format*: string
     family*: string
     families*: Option[seq[string]]
     parameter_size*: string
     quantization_level*: string
+
   OllamaModel* = ref object
     name*: string
     modified_at*: string
     size*: int
     digest*: string
     details*: ModelDetails
+
   ListResp* = ref object
     models*: seq[OllamaModel]
+
   ShowModel* = ref object
     modelfile*: string
     parameters*: string
     `template`*: string
     details*: ModelDetails
+
   EmbeddingReq* = ref object
     model*: string
     prompt*: string
     options*: Option[ModelParameters] # bag of model parameters
+
   EmbeddingResp* = ref object
     embedding*: seq[float64]
 
@@ -200,7 +216,7 @@ proc generate*(api: OllamaAPI, model: string, prompt: string): string =
   result = resp.response
 
 proc generate*(api: OllamaAPI, req: JsonNode): JsonNode =
-  ## direct json interface for /api/generate
+  ## direct json interface for /api/generate.
   ## only use if there are specific new features you need or know what you are doing
   let url = api.baseUrl / "generate"
   var headers: curly.HttpHeaders
@@ -224,7 +240,7 @@ proc chat*(api: OllamaAPI, req: ChatReq): ChatResp =
   result = fromJson(resp.body, ChatResp)
 
 proc chat*(api: OllamaAPI, model: string, messages: seq[string]): string =
-  ## simple interface for /api/chat
+  ## simple interface for /api/chat.
   ## assuming alternating user -> assistant message history
   let req = ChatReq(model: model)
   var user = true
@@ -235,7 +251,7 @@ proc chat*(api: OllamaAPI, model: string, messages: seq[string]): string =
   result = resp.message.content.get
 
 proc chat*(api: OllamaAPI, req: JsonNode): JsonNode =
-  ## direct json interface for /api/chat
+  ## direct json interface for /api/chat.
   ## only use if there are specific new features you need or know what you are doing
   let url = api.baseUrl / "chat"
   var headers: curly.HttpHeaders
@@ -254,7 +270,9 @@ proc createModel*(
   path: string = ""
 ) =
   ## Create a model from a Modelfile
+  ##
   ## (Recommended): set `modelfile` as the contents of your modelfile
+  ## 
   ## (Alternative): set `path` to a server local path to a modelfile
   let url = api.baseUrl / "create"
   let req = CreateModelReq(
@@ -354,6 +372,7 @@ proc generateEmbeddings*(
 # TODO: POST /api/push
 
 proc getVersion*(api: OllamaAPI): string =
+  ## get the current Ollama version
   let url = api.baseUrl / "version"
   let resp = api.curlPool.get(url, timeout = api.curlTimeout)
   if resp.code != 200:
