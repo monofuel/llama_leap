@@ -1,6 +1,5 @@
 # llama_leap
 
-- WIP
 - Nim library to work with the Ollama API
 
 ## Example
@@ -9,6 +8,8 @@
 - you may pass an alternate to `newOllamaAPI()`
 
 ```nim
+import llama_leap
+
 let ollama = newOllamaAPI()
 echo ollama.generate("llama2", "How are you today?")
 ```
@@ -16,6 +17,7 @@ echo ollama.generate("llama2", "How are you today?")
 ## Generate
 
 - Only the non-streaming generate API is currently supported
+  - streaming is coming soon (TM)
 
 ```nim
 # simple interface
@@ -75,4 +77,10 @@ echo "Embedding Length: " & $resp.embedding.len
 
 - ensure ollama is running on the default port
   - `./ollama serve`
-- run `nim c -r tests/test_llama_leap.nim`
+- run `nimble test`
+
+## Related Repos
+
+- [llama_leap](https://github.com/monofuel/openai_leap) is a Nim client for the OpenAI API.
+- [vertex_leap](https://github.com/monofuel/vertex_leap) is a client for Google's VertexAI API.
+- [mono_llm](https://github.com/monofuel/mono_llm) is a higher-level Nim library that creates a unified interface for OpenAI, Ollama, and VertexAI.
