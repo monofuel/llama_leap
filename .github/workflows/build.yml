@@ -17,6 +17,7 @@ jobs:
       # only test compiling for now since it requires the ollama service running
       # TODO setup a test ollama instance
       - run: | 
+          nimble install -y
           nim c examples/example.nim
           nim c tests/test_llama_leap.nim
 
