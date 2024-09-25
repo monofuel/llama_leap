@@ -1,10 +1,14 @@
 import curly, jsony, std/[strutils, tables, json, options, strformat, os]
 
-## ollama API Interface
-## https://github.com/jmorganca/ollama/blob/main/docs/api.md
-## https://github.com/jmorganca/ollama/blob/main/api/types.go
+## ollama API Interface for nim.
+## 
+## https://github.com/monofuel/llama_leap/blob/main/README.md
 
-## model parameters: https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+# ollama API references
+# https://github.com/jmorganca/ollama/blob/main/docs/api.md
+# https://github.com/jmorganca/ollama/blob/main/api/types.go
+
+# model parameters: https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
 
 type
   OllamaAPI* = ref object
