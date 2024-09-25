@@ -1,0 +1,37 @@
+nimTitle	llama_leap	llama_leap.html	module src/llama_leap		0
+nim	OllamaAPI	llama_leap.html#OllamaAPI	type OllamaAPI		14
+nim	ModelParameters	llama_leap.html#ModelParameters	type ModelParameters		19
+nim	ToolFunctionParameters	llama_leap.html#ToolFunctionParameters	object ToolFunctionParameters		38
+nim	ToolFunction	llama_leap.html#ToolFunction	type ToolFunction		46
+nim	Tool	llama_leap.html#Tool	type Tool		51
+nim	GenerateReq	llama_leap.html#GenerateReq	type GenerateReq		55
+nim	GenerateResp	llama_leap.html#GenerateResp	type GenerateResp		67
+nim	ToolCallFunction	llama_leap.html#ToolCallFunction	type ToolCallFunction		80
+nim	ToolCall	llama_leap.html#ToolCall	type ToolCall		84
+nim	ChatMessage	llama_leap.html#ChatMessage	type ChatMessage		87
+nim	ChatReq	llama_leap.html#ChatReq	type ChatReq		93
+nim	ChatResp	llama_leap.html#ChatResp	type ChatResp		102
+nim	CreateModelReq	llama_leap.html#CreateModelReq	type CreateModelReq		114
+nim	ModelDetails	llama_leap.html#ModelDetails	type ModelDetails		120
+nim	OllamaModel	llama_leap.html#OllamaModel	type OllamaModel		127
+nim	ListResp	llama_leap.html#ListResp	type ListResp		134
+nim	ShowModel	llama_leap.html#ShowModel	type ShowModel		137
+nim	EmbeddingReq	llama_leap.html#EmbeddingReq	type EmbeddingReq		143
+nim	EmbeddingResp	llama_leap.html#EmbeddingResp	type EmbeddingResp		148
+nim	newOllamaAPI	llama_leap.html#newOllamaAPI,string,int,float32	proc newOllamaAPI(baseUrl: string = "http://localhost:11434/api";\n             curlPoolSize: int = 4; curlTimeout: float32 = 10000.0): OllamaAPI		174
+nim	close	llama_leap.html#close,OllamaAPI	proc close(api: OllamaAPI)		185
+nim	loadModel	llama_leap.html#loadModel,OllamaAPI,string	proc loadModel(api: OllamaAPI; model: string): JsonNode		189
+nim	generate	llama_leap.html#generate,OllamaAPI,GenerateReq	proc generate(api: OllamaAPI; req: GenerateReq): GenerateResp		201
+nim	generate	llama_leap.html#generate,OllamaAPI,string,string	proc generate(api: OllamaAPI; model: string; prompt: string): string		212
+nim	generate	llama_leap.html#generate,OllamaAPI,JsonNode	proc generate(api: OllamaAPI; req: JsonNode): JsonNode		218
+nim	chat	llama_leap.html#chat,OllamaAPI,ChatReq	proc chat(api: OllamaAPI; req: ChatReq): ChatResp		231
+nim	chat	llama_leap.html#chat,OllamaAPI,string,seq[string]	proc chat(api: OllamaAPI; model: string; messages: seq[string]): string		242
+nim	chat	llama_leap.html#chat,OllamaAPI,JsonNode	proc chat(api: OllamaAPI; req: JsonNode): JsonNode		253
+nim	createModel	llama_leap.html#createModel,OllamaAPI,string,string,string	proc createModel(api: OllamaAPI; name: string; modelfile: string = "";\n            path: string = "")		266
+nim	listModels	llama_leap.html#listModels,OllamaAPI	proc listModels(api: OllamaAPI): ListResp		296
+nim	showModel	llama_leap.html#showModel,OllamaAPI,string	proc showModel(api: OllamaAPI; name: string): ShowModel		304
+nim	pullModel	llama_leap.html#pullModel,OllamaAPI,string	proc pullModel(api: OllamaAPI; name: string)		317
+nim	generateEmbeddings	llama_leap.html#generateEmbeddings,OllamaAPI,string,string,Option[ModelParameters]	proc generateEmbeddings(api: OllamaAPI; model: string; prompt: string;\n                   options: Option[ModelParameters] = none(ModelParameters)): EmbeddingResp		333
+nim	getVersion	llama_leap.html#getVersion,OllamaAPI	proc getVersion(api: OllamaAPI): string		374
+nimgrp	generate	llama_leap.html#generate-procs-all	proc		201
+nimgrp	chat	llama_leap.html#chat-procs-all	proc		231
